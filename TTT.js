@@ -31,8 +31,6 @@ module.exports = class TTT {
     }
 
     add({ x, y }) {
-        this.plays++;
-
         this.player.coords.x[x][y] = true;
         this.player.coords.y[y][x] = true;
 
@@ -46,18 +44,19 @@ module.exports = class TTT {
             return;
         }
 
-        if (this.player.coords.x[x].includes(y) || this.opponent.coords.x[x].includes(y)) {
+        if (this.player.coords.x[x][y] || this.opponent.coords.x[x][y]) {
             console.log("square already marked");
-            console.log(this.toString());
+            console.log(this.toString() + "\n");
 
             return;
         }
 
         this.add({ x, y });
+        this.plays++;
 
         console.log(this.toString());
 
-        if (this.plays >= this.size - 1 && this.wonGame()) {
+        if (this.wonGame()) {
             return;
         }
 
@@ -103,20 +102,31 @@ module.exports = class TTT {
         return false;
     }
 
-    winRow() {
+    winCol() {
         return this.player.coords.x.some(row => this.lengthCheck(row));
     }
 
-    winCol() {
+    winRow() {
         return this.player.coords.y.some(row => this.lengthCheck(row));
+    }
+
+    negSlopeWin() {
+        return this.player.coords.x.reduce((acc, col, idx) => acc && !!col[idx], true);
+    }
+
+    posSlopeWin() {
+        return this.player.coords.x.reduce((acc, col, idx) => acc && !!col[this.size - 1 - idx], true);
     }
 
     wonGame() {
         if (
-            this.winRow() ||
-            this.winCol() ||
-            this.player.coords.x.reduce((acc, col, idx) => acc && col[idx], true) ||
-            this.player.coords.x.reduce((acc, col, idx) => acc && col[this.size - idx], true)
+            this.plays >= ((this.size * 2) - 1) &&
+            (
+                this.winRow() ||
+                this.winCol() ||
+                this.negSlopeWin() ||
+                this.posSlopeWin()
+            )
         ) {
             console.log(`${this.player.name} won!`);
 
@@ -125,6 +135,6 @@ module.exports = class TTT {
             return true;
         }
 
-        console.log("next");
+        console.log("");
     }
 };
